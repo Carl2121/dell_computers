@@ -24,17 +24,16 @@ def data_fetch(query):
     cur.close()
     return data
 
+#CUSTOMERS
 @app.route("/customers", methods=["GET"])
 def get_customers():
     data = data_fetch("""SELECT * FROM customers""")
     return make_response(jsonify(data), 200)
 
-
 @app.route("/customers/<int:id>", methods=["GET"])
 def get_customer_by_id(id):
     data = data_fetch("""SELECT * FROM customers where id = {}""".format(id))
     return make_response(jsonify(data), 200)
-
 
 @app.route("/customers", methods=["POST"])
 def add_customer():
@@ -59,9 +58,8 @@ def add_customer():
         201,
     )
 
-
 @app.route("/customers/<int:id>", methods=["PUT"])
-def update_actor(id):
+def update_customer(id):
     cur = mysql.connection.cursor()
     info = request.get_json()
     customer_fname = info["customer_fname"]
@@ -82,7 +80,6 @@ def update_actor(id):
         200,
     )
 
-
 @app.route("/customers/<int:id>", methods=["DELETE"])
 def delete_customer(id):
     cur = mysql.connection.cursor()
@@ -97,13 +94,81 @@ def delete_customer(id):
         200,
     )
 
+#PRODUCTS
+@app.route("/products", methods=["GET"])
+def get_products():
+    data = data_fetch("""SELECT * FROM products""")
+    return make_response(jsonify(data), 200)
 
-# @app.route("/actors/format", methods=["GET"])
-# def get_params():
-#     fmt = request.args.get("id")
-#     foo = request.args.get("aaaa")
-#     return make_response(jsonify({"format": fmt, "foo": foo}), 200)
 
+@app.route("/products/<int:id>", methods=["GET"])
+def get_product_by_id(id):
+    data = data_fetch("""SELECT * FROM products where id = {}""".format(id))
+    return make_response(jsonify(data), 200)
+
+@app.route("/products", methods=["POST"])
+def add_product():
+    cur = mysql.connection.cursor()
+    info = request.get_json()
+    product_name = info["product_name"]
+    product_price = info["product_price"]
+    product_description = info["product_description"]
+    product_stock = info["product_stock"]
+    product_category = info["product_category"]
+    is_dell = info["is_dell"]
+    cur.execute(
+        """ INSERT INTO products (product_name, product_price, product_description, product_stock, product_category, is_dell) VALUE (%s, %s, %s, %s, %s, %s)""",
+        (product_name, product_price, product_description, product_stock, product_category, is_dell),
+    )
+    mysql.connection.commit()
+    print("row(s) affected :{}".format(cur.rowcount))
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {"message": "product added successfully", "rows_affected": rows_affected}
+        ),
+        201,
+    )
+
+@app.route("/products/<int:id>", methods=["PUT"])
+def update_product(id):
+    cur = mysql.connection.cursor()
+    info = request.get_json()
+    product_name = info["product_name"]
+    product_price = info["product_price"]
+    product_description = info["product_description"]
+    product_stock = info["product_stock"]
+    product_category = info["product_category"]
+    is_dell = info["is_dell"]
+
+    cur.execute(
+        """ UPDATE products SET product_name = %s, product_price = %s, product_description = %s, product_stock = %s, product_category = %s, is_dell = %s WHERE id = %s """,
+        (product_name, product_price, product_description, product_stock, product_category, is_dell, id),
+    )
+    mysql.connection.commit()
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {"message": "product updated successfully", "rows_affected": rows_affected}
+        ),
+        200,
+    )
+
+@app.route("/products/<int:id>", methods=["DELETE"])
+def delete_product(id):
+    cur = mysql.connection.cursor()
+    cur.execute(""" DELETE FROM products where id = %s """, (id,))
+    mysql.connection.commit()
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {"message": "product deleted successfully", "rows_affected": rows_affected}
+        ),
+        200,
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)
