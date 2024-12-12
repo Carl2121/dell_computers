@@ -170,5 +170,79 @@ def delete_product(id):
         200,
     )
 
+
+#SALES
+@app.route("/sales", methods=["GET"])
+def get_sales():
+    data = data_fetch("""SELECT * FROM sales""")
+    return make_response(jsonify(data), 200)
+
+
+@app.route("/sales/<int:id>", methods=["GET"])
+def get_sale_by_id(id):
+    data = data_fetch("""SELECT * FROM sales where id = {}""".format(id))
+    return make_response(jsonify(data), 200)
+
+@app.route("/sales", methods=["POST"])
+def add_sale():
+    cur = mysql.connection.cursor()
+    info = request.get_json()
+    sale_total_value = info["sale_total_value"]
+    quantity_sold = info["quantity_sold"]
+    customers_id = info["customers_id"]
+    status = info["status"]
+
+    cur.execute(
+        """ INSERT INTO sales (sale_total_value, quantity_sold, customers_id, status) VALUE (%s, %s, %s, %s)""",
+        (sale_total_value, quantity_sold, customers_id, status),
+    )
+    mysql.connection.commit()
+    print("row(s) affected :{}".format(cur.rowcount))
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {"message": "sale added successfully", "rows_affected": rows_affected}
+        ),
+        201,
+    )
+
+@app.route("/sales/<int:id>", methods=["PUT"])
+def update_sale(id):
+    cur = mysql.connection.cursor()
+    info = request.get_json()
+    sale_total_value = info["sale_total_value"]
+    quantity_sold = info["quantity_sold"]
+    customers_id = info["customers_id"]
+    status = info["status"]
+
+    cur.execute(
+        """ UPDATE sales SET sale_total_value = %s , quantity_sold = %s, customers_id = %s, status = %s WHERE id = %s """,
+        (sale_total_value, quantity_sold, customers_id, status, id),
+    )
+    mysql.connection.commit()
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {"message": "sale updated successfully", "rows_affected": rows_affected}
+        ),
+        200,
+    )
+
+@app.route("/sales/<int:id>", methods=["DELETE"])
+def delete_sale(id):
+    cur = mysql.connection.cursor()
+    cur.execute(""" DELETE FROM sales where id = %s """, (id,))
+    mysql.connection.commit()
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {"message": "sale deleted successfully", "rows_affected": rows_affected}
+        ),
+        200,
+    )
+
 if __name__ == "__main__":
     app.run(debug=True)
