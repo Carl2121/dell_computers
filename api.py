@@ -244,5 +244,89 @@ def delete_sale(id):
         200,
     )
 
+#PRODUCT SALES
+@app.route("/product_sales", methods=["GET"])
+def get_product_sales():
+    data = data_fetch("""SELECT * FROM product_sales""")
+    return make_response(jsonify(data), 200)
+
+
+@app.route("/product_sales/<int:sales_id>/<int:products_id>", methods=["GET"])
+def get_product_sale_by_id(sales_id, products_id):
+    data = data_fetch(
+        """SELECT * FROM product_sales WHERE sales_id = {} AND products_id = {}""".format(
+            sales_id, products_id
+        )
+    )
+    return make_response(jsonify(data), 200)
+
+@app.route("/product_sales", methods=["POST"])
+def add_product_sale():
+    cur = mysql.connection.cursor()
+    info = request.get_json()
+    sales_id = info["sales_id"]
+    products_id = info["products_id"]
+
+    cur.execute(
+        """ INSERT INTO product_sales (sales_id, products_id) VALUES (%s, %s)""",
+        (sales_id, products_id),
+    )
+    mysql.connection.commit()
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {
+                "message": "product_sale added successfully",
+                "rows_affected": rows_affected,
+            }
+        ),
+        201,
+    )
+
+@app.route("/product_sales/<int:sales_id>/<int:products_id>", methods=["PUT"])
+def update_product_sale(sales_id, products_id):
+    cur = mysql.connection.cursor()
+    info = request.get_json()
+    new_sales_id = info["sales_id"]
+    new_products_id = info["products_id"]
+
+    cur.execute(
+        """ UPDATE product_sales SET sales_id = %s, products_id = %s WHERE sales_id = %s AND products_id = %s """,
+        (new_sales_id, new_products_id, sales_id, products_id),
+    )
+    mysql.connection.commit()
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {
+                "message": "product_sale updated successfully",
+                "rows_affected": rows_affected,
+            }
+        ),
+        200,
+    )
+
+@app.route("/product_sales/<int:sales_id>/<int:products_id>", methods=["DELETE"])
+def delete_product_sale(sales_id, products_id):
+    cur = mysql.connection.cursor()
+    cur.execute(
+        """ DELETE FROM product_sales WHERE sales_id = %s AND products_id = %s """,
+        (sales_id, products_id),
+    )
+    mysql.connection.commit()
+    rows_affected = cur.rowcount
+    cur.close()
+    return make_response(
+        jsonify(
+            {
+                "message": "product_sale deleted successfully",
+                "rows_affected": rows_affected,
+            }
+        ),
+        200,
+    )
+
 if __name__ == "__main__":
     app.run(debug=True)
