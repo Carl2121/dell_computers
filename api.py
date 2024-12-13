@@ -417,5 +417,67 @@ def delete_product_sale(sales_id, products_id):
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
 
+
+@app.route("/customers/<int:customer_id>/purchases/<int:sale_id>/status", methods=["GET"])
+def get_purchase_status(customer_id, sale_id):
+    try:
+        # Fetch the status of the specific purchase
+        query = """
+            SELECT 
+                sales.id AS sale_id, 
+                sales.status, 
+                sales.sale_total_value, 
+                sales.quantity_sold 
+            FROM sales
+            WHERE sales.id = %s AND sales.customers_id = %s
+        """
+        data = data_fetch(query, (sale_id, customer_id))
+        
+        if not data:
+            return make_response(jsonify({"error": "No purchase found for this customer and sale ID"}), 404)
+        
+        return make_response(jsonify(data[0]), 200)  # Return the first matching record
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+
+
+@app.route("/products/<int:product_id>/stock", methods=["GET"])
+def get_product_stock(product_id):
+    try:
+        data = data_fetch("SELECT product_stock FROM products WHERE id = %s", (product_id,))
+        if not data:
+            return make_response(jsonify({"error": "Product not found"}), 404)
+        return make_response(jsonify({"product_id": product_id, "stock": data[0]["product_stock"]}), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
+
+@app.route("/customers/<int:customer_id>/purchases", methods=["GET"])
+def get_purchases_by_customer(customer_id):
+    try:
+        # Fetch purchases made by the customer
+        query = """
+            SELECT 
+                sales.id AS sale_id, 
+                sales.sale_total_value, 
+                sales.quantity_sold, 
+                sales.status, 
+                products.product_name, 
+                products.product_price 
+            FROM sales
+            JOIN product_sales ON sales.id = product_sales.sales_id
+            JOIN products ON product_sales.products_id = products.id
+            WHERE sales.customers_id = %s
+        """
+        data = data_fetch(query, (customer_id,))
+        
+        if not data:
+            return make_response(jsonify({"error": "No purchases found for this customer"}), 404)
+        
+        return make_response(jsonify(data), 200)
+    except Exception as e:
+        return make_response(jsonify({"error": str(e)}), 500)
+
 if __name__ == "__main__":
     app.run(debug=True)
