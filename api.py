@@ -13,8 +13,8 @@ mysql = MySQL(app)
 
 
 @app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
+def index_page():
+    return "<h1><strong>Welcome To Dell Computers and Electronics!</strong></h1>"
 
 
 def data_fetch(query):
