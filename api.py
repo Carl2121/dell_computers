@@ -82,7 +82,73 @@ def login():
 
 @app.route("/")
 def index_page():
-    return "<h1><strong>Welcome To Dell Computers and Electronics!</strong></h1>"
+    return """
+    <html>
+        <head>
+            <title>Welcome to Dell Computers and Electronics</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f9;
+                    margin: 0;
+                    padding: 0;
+                }
+                .header {
+                    background-color: #2c3e50;
+                    color: white;
+                    text-align: center;
+                    padding: 20px;
+                }
+                .container {
+                    width: 80%;
+                    margin: 0 auto;
+                    padding: 20px;
+                }
+                .story {
+                    background-color: #ecf0f1;
+                    border-radius: 5px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                }
+                .story h2 {
+                    color: #34495e;
+                }
+                .story p {
+                    color: #7f8c8d;
+                }
+                a {
+                    color: #3498db;
+                    text-decoration: none;
+                }
+                a:hover {
+                    text-decoration: underline;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Welcome to Dell Computers and Electronics!</h1>
+            </div>
+            <div class="container">
+                <div class="story">
+                    <h2>Story 1: View Purchase Status</h2>
+                    <p>Check the purchase status of a sale by providing the sale ID. Find out the status, total value, and quantity sold.</p>
+                    <a href="/sales/2/status">View Status</a>
+                </div>
+                <div class="story">
+                    <h2>Story 2: Check Product Stock</h2>
+                    <p>Get the current stock of a product by providing its product ID. See how many units are available for sale.</p>
+                    <a href="/products/4/stocks">Check Stock</a>
+                </div>
+                <div class="story">
+                    <h2>Story 3: View Customer Purchases</h2>
+                    <p>View a customer's purchase history by providing the customer ID. See details on the products they've purchased and the total value spent.</p>
+                    <a href="/customers/1/purchases">View Purchases</a>
+                </div>
+            </div>
+        </body>
+    </html>
+    """
 
 def data_fetch(query, params=None):
     try:
@@ -506,16 +572,31 @@ def get_purchase_status(sale_id):
 
 
 
+
 # STORY 2
-@app.route("/products/<int:product_id>/stock", methods=["GET"])
+@app.route("/products/<int:product_id>/stocks", methods=["GET"])
 def get_product_stock(product_id):
     try:
-        data = data_fetch("SELECT product_stock FROM products WHERE id = %s", (product_id,))
+        # Fetch product name and stock
+        data = data_fetch(
+            "SELECT product_name, product_stock FROM products WHERE id = %s", 
+            (product_id,)
+        )
         if not data:
             return make_response(jsonify({"error": "Product not found"}), 404)
-        return make_response(jsonify({"product_id": product_id, "stock": data[0]["product_stock"]}), 200)
+        
+        # Return product ID, name, and stock in the response
+        return make_response(
+            jsonify({
+                "product_id": product_id, 
+                "product_name": data[0]["product_name"], 
+                "stock": data[0]["product_stock"]
+            }), 
+            200
+        )
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
+
 
 # STORY 3
 @app.route("/customers/<int:customer_id>/purchases", methods=["GET"])
