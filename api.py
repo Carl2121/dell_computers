@@ -417,24 +417,24 @@ def delete_product_sale(sales_id, products_id):
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
 
-
-@app.route("/customers/<int:customer_id>/purchases/<int:sale_id>/status", methods=["GET"])
-def get_purchase_status(customer_id, sale_id):
+# STORY 1
+@app.route("/sales/<int:sale_id>/status", methods=["GET"])
+def get_purchase_status(sale_id):
     try:
-        # Fetch the status of the specific purchase
         query = """
             SELECT 
                 sales.id AS sale_id, 
                 sales.status, 
                 sales.sale_total_value, 
-                sales.quantity_sold 
+                sales.quantity_sold, 
+                sales.customers_id
             FROM sales
-            WHERE sales.id = %s AND sales.customers_id = %s
+            WHERE sales.id = %s
         """
-        data = data_fetch(query, (sale_id, customer_id))
+        data = data_fetch(query, (sale_id,))
         
         if not data:
-            return make_response(jsonify({"error": "No purchase found for this customer and sale ID"}), 404)
+            return make_response(jsonify({"error": "No purchase found for this sale ID"}), 404)
         
         return make_response(jsonify(data[0]), 200)  # Return the first matching record
     except Exception as e:
@@ -442,6 +442,7 @@ def get_purchase_status(customer_id, sale_id):
 
 
 
+# STORY 2
 @app.route("/products/<int:product_id>/stock", methods=["GET"])
 def get_product_stock(product_id):
     try:
@@ -452,7 +453,7 @@ def get_product_stock(product_id):
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
 
-
+# STORY 3
 @app.route("/customers/<int:customer_id>/purchases", methods=["GET"])
 def get_purchases_by_customer(customer_id):
     try:
