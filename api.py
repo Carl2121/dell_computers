@@ -128,6 +128,7 @@ def index_page():
         <body>
             <div class="header">
                 <h1>Welcome to Dell Computers and Electronics!</h1>
+                 <h4>(Proceed to Postman for API Testing)</h4>
             </div>
             <div class="container">
                 <div class="story">
