@@ -22,11 +22,11 @@ Environment variables you need:
 MYSQL_HOST: MySQL server (e.g., localhost). MYSQL_USER: Your MySQL username (e.g., root). MYSQL_PASSWORD: Your MySQL password. MYSQL_DB: Database name (e.g., dell_computers). SECRET_KEY: A secret key for the app (e.g., ss_marschiert).
 
 Or set these directly in the code:
-`app.config["MYSQL_HOST"] = "localhost"
-app.config["MYSQL_USER"] = "root"
-app.config["MYSQL_PASSWORD"] = "root"
-app.config["MYSQL_DB"] = "dell_computers"
-app.config["SECRET_KEY"] = "ss_marschiert"`
+`app.config["MYSQL_HOST"] = "localhost"`
+`app.config["MYSQL_USER"] = "root"`
+`app.config["MYSQL_PASSWORD"] = "root"`
+`app.config["MYSQL_DB"] = "dell_computers"`
+`app.config["SECRET_KEY"] = "ss_marschiert"`
 
 ## Key notes
 
