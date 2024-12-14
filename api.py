@@ -1,5 +1,8 @@
 from flask import Flask, make_response, jsonify, request
 from flask_mysqldb import MySQL
+import jwt
+from datetime import datetime, timedelta, timezone
+from functools import wraps
 
 app = Flask(__name__)
 app.config["MYSQL_HOST"] = "localhost"
@@ -7,6 +10,7 @@ app.config["MYSQL_USER"] = "root"
 app.config["MYSQL_PASSWORD"] = "root"
 app.config["MYSQL_DB"] = "dell_computers"
 app.config["MYSQL_CURSORCLASS"] = "DictCursor"
+app.config["SECRET_KEY"] = "ss_marschiert"
 
 mysql = MySQL(app)
 
@@ -17,6 +21,64 @@ def not_found(error):
 @app.errorhandler(400)
 def bad_request(error):
     return make_response(jsonify({"error": "Bad request"}), 400)
+
+# JWT Authentication Decorator
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get("Authorizations")
+        if not token:
+            return make_response(jsonify({"error": "You need a token to access this endpoint!"}), 401)
+        try:
+            data = jwt.decode(token, app.config["SECRET_KEY"], algorithms=["HS256"])
+            request.user = data
+        except jwt.ExpiredSignatureError:
+            return make_response(jsonify({"error": "Token has expired"}), 401)
+        except jwt.InvalidTokenError:
+            return make_response(jsonify({"error": "Invalid token"}), 401)
+        return f(*args, **kwargs)
+    return decorated
+
+# Role-based Access Control Decorator
+def role_required(role):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if not hasattr(request, "user") or request.user.get("role") != role:
+                return make_response(jsonify({"error": "Access forbidden"}), 403)
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
+# Generate JWT Token
+@app.route("/login", methods=["POST"])
+def login():
+    auth = request.get_json()
+    if not auth or not auth.get("username") or not auth.get("password"):
+        return make_response(jsonify({"error": "Username and password required"}), 400)
+
+    username = auth["username"]
+    password = auth["password"]
+
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
+    user = cur.fetchone()
+    cur.close()
+
+    if not user:
+        return make_response(jsonify({"error": "Invalid credentials"}), 401)
+
+    token = jwt.encode(
+        {
+            "user_id": user["id"],
+            "username": user["username"],
+            "role": user["role"],
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1)
+        },
+        app.config["SECRET_KEY"],
+        algorithm="HS256"
+    )
+    return jsonify({"token": token})
 
 @app.route("/")
 def index_page():
@@ -65,6 +127,7 @@ def validate_product_sales_input(data):
 
 # CUSTOMERS CRUD
 @app.route("/customers", methods=["GET"])
+@token_required
 def get_customers():
     try:
         data = data_fetch("SELECT * FROM customers")
@@ -73,6 +136,7 @@ def get_customers():
         return make_response(jsonify({"error": str(e)}), 500)
 
 @app.route("/customers/<int:id>", methods=["GET"])
+@token_required
 def get_customer_by_id(id):
     try:
         data = data_fetch("SELECT * FROM customers WHERE id = %s", (id,))
